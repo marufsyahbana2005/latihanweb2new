@@ -2,12 +2,8 @@
 
 namespace App\Providers;
 
-use App\Models\Ticket;
-use App\Models\User;
-use App\Policies\TicketPolicy;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 
@@ -26,16 +22,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        Gate::policy(Ticket::class, TicketPolicy::class);
-
-        Gate::define('view-ticket-summary', fn (User $user) => (bool) $user->is_admin);
-
+        // Rate Limiter untuk rute login (maksimal 5 kali percobaan per menit per IP)
         RateLimiter::for('api-login', function (Request $request) {
-            return Limit::perMinute(5)->by('login-ip:' . $request->ip());
-        });
-
-        RateLimiter::for('api-v1', function (Request $request) {
-            return Limit::perMinute(60)->by('api-user:' . ($request->user()?->id ?? $request->ip()));
+            return Limit::perMinute(5)->by('login-ip:'.$request->ip());
         });
     }
 }
